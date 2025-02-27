@@ -34,9 +34,9 @@ export const registerUser: RequestHandler = async (req, res) => {
 
 export const loginUser: RequestHandler = async (req, res) => {
     try {
-        const { userId, password } = req.body;
+        const { email, password } = req.body;
 
-        const user = await User.findOne({ userId });
+        const user = await User.findOne({ email });
 
         if (user && (await bcrypt.compare(password, user.password))) {
             res.json({
