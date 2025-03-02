@@ -1,11 +1,11 @@
-import mongoose, { Schema, Document } from "mongoose";
-
+import mongoose, { Schema, Document, ObjectId } from "mongoose";
 
 export interface IStudent extends Document {
+    _id: ObjectId;
     // Personal Details
     name: string;
-    dateOfBirth: string;
-    gender: string;
+    dateOfBirth: Date;
+    gender: "Male" | "Female" | "Other";
     mobileNumber: string;
 
     // Parent Details
@@ -16,48 +16,25 @@ export interface IStudent extends Document {
     guardianName?: string;
     guardianMobile?: string;
 
-    // Address Details
-    presentAddressLine1: string;
-    presentAddressLine2?: string;
-    presentState: string;
-    presentCity: string;
-    presentPinCode: string;
-    permanentAddressLine1: string;
-    permanentAddressLine2?: string;
-    permanentState: string;
-    permanentCity: string;
-    permanentPinCode: string;
-
     // MH MCA CET Details
     cetApplicationId: string;
     cetRank: string;
 
-    // Admission Details
-    category: string;
-    admissionCategory: string;
-    pwdCategory: string;
-    religiousMinority: string;
-    ewsStatus: boolean;
-    orphanStatus: boolean;
-    mhmcacetId: string;
-    stateMeritNumber: string;
-    feesPaid: string;
+    // Password
+    password: string; // Plain Password
 
-    // File Uploads (Store file paths or URLs)
-    admissionReceipt: string; // File path or URL
-    feesReceipt: string; // File path or URL
-    aadharCard: string; // File path or URL
-    aadharNumber: string;
+    // Methods
+    matchPassword: (enteredPassword: string) => boolean;
 }
 
 // Define Mongoose Schema
-const StudentSchema: Schema = new Schema(
+const StudentSchema: Schema<IStudent> = new Schema(
     {
         // Personal Details
         name: { type: String, required: true },
-        dateOfBirth: { type: String, required: true },
-        gender: { type: String, required: true },
-        mobileNumber: { type: String, required: true },
+        dateOfBirth: { type: Date, required: true },
+        gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
+        mobileNumber: { type: String, required: true, match: /^\d{10}$/ },
 
         // Parent Details
         fatherName: { type: String, required: true },
@@ -67,41 +44,20 @@ const StudentSchema: Schema = new Schema(
         guardianName: { type: String },
         guardianMobile: { type: String },
 
-        // Address Details
-        presentAddressLine1: { type: String, required: true },
-        presentAddressLine2: { type: String },
-        presentState: { type: String, required: true },
-        presentCity: { type: String, required: true },
-        presentPinCode: { type: String, required: true },
-        permanentAddressLine1: { type: String, required: true },
-        permanentAddressLine2: { type: String },
-        permanentState: { type: String, required: true },
-        permanentCity: { type: String, required: true },
-        permanentPinCode: { type: String, required: true },
-
         // MH MCA CET Details
-        cetApplicationId: { type: String, required: true },
+        cetApplicationId: { type: String, required: true, unique: true },
         cetRank: { type: String, required: true },
 
-        // Admission Details
-        category: { type: String, required: true },
-        admissionCategory: { type: String, required: true },
-        pwdCategory: { type: String, required: true },
-        religiousMinority: { type: String, required: true },
-        ewsStatus: { type: Boolean, required: true },
-        orphanStatus: { type: Boolean, required: true },
-        mhmcacetId: { type: String, required: true },
-        stateMeritNumber: { type: String, required: true },
-        feesPaid: { type: String, required: true },
-
-        // File Uploads (Store file paths or URLs)
-        admissionReceipt: { type: String, required: true }, // e.g., "/uploads/admission_receipt.pdf"
-        feesReceipt: { type: String, required: true }, // e.g., "/uploads/fees_receipt.jpg"
-        aadharCard: { type: String, required: true }, // e.g., "/uploads/aadhar_card.png"
-        aadharNumber: { type: String, required: true },
+        // Password (Plain Text)
+        password: { type: String, required: true, minlength: 6 },
     },
     { timestamps: true } // Automatically adds createdAt & updatedAt fields
 );
+
+// **Method to match passwords (No hashing now)**
+StudentSchema.methods.matchPassword = function (enteredPassword: string) {
+    return enteredPassword === this.password; // Direct comparison
+};
 
 // Export the model
 const Student = mongoose.model<IStudent>("Student", StudentSchema);
